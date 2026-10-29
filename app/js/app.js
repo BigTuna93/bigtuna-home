@@ -154,22 +154,24 @@
   /** "movies", or "titles" once TV is in the mix. */
   function titlesWord() { return moviesOnly() ? 'movies' : 'titles'; }
 
-  /** How many filters are narrowing the list (Type counts when it isn't the usual movies-only). The services shown
-   *  are chosen in Settings and rarely change, so they're not counted (or cleared) here. */
+  /** How many filters are narrowing the list (Type counts when it isn't the usual movies-only, Seen when it's Exclude).
+   *  The services shown are chosen in Settings and rarely change, so they're not counted (or cleared) here. */
   function activeFilters() {
-    return (pickedGenres().length ? 1 : 0) + (pickedYears().length ? 1 : 0) + (moviesOnly() ? 0 : 1);
+    return (pickedGenres().length ? 1 : 0) + (pickedYears().length ? 1 : 0) + (moviesOnly() ? 0 : 1) + (Store.get('showWatched') ? 0 : 1);
   }
 
   /** The chips in the filter row, in order: Clear only while a filter is on. */
   function filterIds() {
-    return ['rank', 'genre', 'year', 'type'].concat(activeFilters() ? ['clear'] : []).concat(['scope']);
+    return ['rank', 'genre', 'year', 'type', 'seen'].concat(activeFilters() ? ['clear'] : []).concat(['scope']);
   }
 
-  /** Back to all genres and years, and movies only. Services shown, Ranked by and My services / All / Watchlist stay. */
+  /** Back to all genres and years, movies only, and seen titles included. Services shown, Ranked by and
+   *  My services / All / Watchlist stay. */
   function clearFilters() {
     Store.set('genre', []);
     Store.set('year', []);
     Store.set('kind', ['movie']);
+    Store.set('showWatched', true);
     S.fIdx = 0;
     toast('Filters cleared');
     filtersChanged();
@@ -183,6 +185,7 @@
       chip('genre', 'Genre', genreLabel(), pickedGenres().length > 0) +
       chip('year', 'Year', several(pickedYears(), 'Any year'), pickedYears().length > 0) +
       chip('type', 'Type', kindLabel(), !moviesOnly()) +
+      chip('seen', 'Seen', Store.get('showWatched') ? 'Include' : 'Exclude', !Store.get('showWatched')) +
       (activeFilters() ? '<div class="chip clear" data-f="clear">✕ Clear ' + activeFilters() + '</div>' : '') +
       '<div class="seg" data-f="scope"><span class="' + (scope === 'mine' ? 'sel' : '') + '">My services</span><span class="' + (scope === 'all' ? 'sel' : '') + '">All media</span>' +
       '<span class="' + (scope === 'watchlist' ? 'sel' : '') + '">Watchlist</span></div>';
@@ -196,6 +199,19 @@
     if (id === 'scope') { toggleScope(); return; }
     if (id === 'service') { openServiceFilter(); return; }
     if (id === 'clear') { clearFilters(); return; }
+    if (id === 'seen') {
+      // Titles you've marked seen (✓): kept in the list, or left out of it.
+      var inc = Store.get('showWatched');
+      openList({
+        kind: 'picker', title: 'Seen', hint: 'Titles you\'ve marked as seen (✓).',
+        items: [[true, 'Include'], [false, 'Exclude']].map(function (x) {
+          return {label: x[1], sel: x[0] === inc, val: x[0] === inc ? '✓' : '',
+                  ok: function () { Store.set('showWatched', x[0]); closeList(); if (x[0] !== inc) filtersChanged(); }};
+        }),
+        start: inc ? 0 : 1
+      });
+      return;
+    }
     if (id === 'type') {
       openMulti('Type', 'kind', function () { return 'All types'; }, function () { return KINDS; });
       return;
@@ -1126,7 +1142,6 @@
       {section: 'Top movies for ' + person().name},
       opt('Rank by', Store.get('rankBy') === 'meta' ? 'Metacritic' : 'IMDb rating', 'rankBy', ['imdb', 'meta'], listChanged),
       opt('Show', {mine: 'My services', all: 'All media', watchlist: 'Watchlist'}[Store.get('scope')], 'scope', SCOPES, function () { scopeChanged(); listChanged(); }),
-      opt('Watched movies', Store.get('showWatched') ? 'Show (marked ✓)' : 'Hide', 'showWatched', [true, false], listChanged),
       opt('Minimum IMDb ratings', Store.get('minVotes').toLocaleString('en-US'), 'minVotes', VOTES, listChanged),
       opt('Movies in the list', String(Store.get('listSize')), 'listSize', SIZES, listChanged),
       {label: 'My streaming services', val: myServices().length + ' on  ›', ok: openServices},

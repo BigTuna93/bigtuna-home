@@ -13,7 +13,8 @@ A clean, ad-free home screen for the Samsung QN55Q60TAF (2020, Tizen 5.5). Two l
   rating, vote count and Metacritic score. Titles under 20,000 IMDb votes are left out (adjustable), the rest are ranked
   by IMDb or Metacritic. Lists are kept 2 days and ratings 30, so most visits cost no lookups; if OMDb's free limit
   (1,000 a day) runs out, TMDB's score stands in until midnight UTC.
-- **Filters.** Ranked by, Genre, Year, Type (Movies, TV Series, Miniseries), Clear, and My services / All media /
+- **Filters.** Ranked by, Genre, Year, Type (Movies, TV Series, Miniseries), Seen (include or exclude titles you've
+  marked seen), Clear, and My services / All media /
   Watchlist. Which services count is set in Settings. Open a title to see its plot, cast and where it streams, mark it
   seen, add it to your watchlist, or open its app.
 - **Back after an app closes.** Apps open from the dock (recently used first). A small background helper watches the app

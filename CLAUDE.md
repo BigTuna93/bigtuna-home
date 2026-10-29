@@ -54,7 +54,7 @@ CLAUDE.local.md (not shared). Your TV's address and hardware address go in confi
 ## How the app works
 
 - **Layout:** fixed 1920x1080 px; the preview scales it to the window. Full: brand + clock + weather, hero (highlighted title) →
-  filter chips (Ranked by, Genre, Year, Type, ✕ Clear, My services/All media/Watchlist) → Top N row → centered dock (installed apps +
+  filter chips (Ranked by, Genre, Year, Type, Seen, ✕ Clear, My services/All media/Watchlist) → Top N row → centered dock (installed apps +
   Settings + Samsung Home). Background = highlighted title's TMDB backdrop, two crossfading layers. Simple: big clock + app grid over
   drawn mountains (`app/img/mountains-*.svg`, made by `tools/make-backdrop.py`), no movie lookups.
 - **Remote:** arrows, OK (13), Back (10009; Esc/Backspace in browser). Red 403 Full/Simple layout, Green 404 scope, Yellow 405 rank,
@@ -73,8 +73,9 @@ CLAUDE.local.md (not shared). Your TV's address and hardware address go in confi
   "Services in the list" (Settings, store key `service`) only narrows My services: `query()` sends `service: []` unless scope is 'mine'.
 - **Type filter:** store key `kind` (per person, default `['movie']`, `[]` = all): Movies, TV Series, Miniseries (`with_type` 4|0|3 /
   2; movie genre ids mapped via `TV_GENRE`). **Show ids are `tv:<TMDB id>` everywhere**; plain numbers are movies. OMDb has no Metascore
-  for most shows. ✕ Clear resets Genre, Year and Type (to movies) only.
-- **People:** "Who's watching?" at start with 2+ people; each person has their own layout, filters, watched list (✓; Show/Hide),
+  for most shows. **Seen** chip (store key `showWatched`, per person, default true = Include; Exclude leaves out titles marked ✓ via
+  `q.exclude`); it was a Settings row until 2026-10-28. ✕ Clear resets Genre, Year, Type (to movies) and Seen (to Include) only.
+- **People:** "Who's watching?" at start with 2+ people; each person has their own layout, filters, seen list (✓),
   watchlist and recent apps. While the start picker is open, body class `welcome` hides everything but the brand and clock
   (mountains behind). Picking someone with the other layout from Settings uses the layout fade.
 - **Layout fade:** `swapLayout()` fades ONE sheet (`#cover`, background colour, z-index 5, under Settings) over the screen (0.18 s),
@@ -91,7 +92,7 @@ CLAUDE.local.md (not shared). Your TV's address and hardware address go in confi
   before), a minute after the last change (`Store.onChange`) and on start if the last one is over a day old. A fresh install with a
   backup offers "Restore your backup?" first. Needs filesystem.read/write + mediastorage privileges.
 - **Settings:** layout, theme dark/light/auto, background, animations, 12/24 h clock, rank by, scope, min votes, list size, my
-  services, services in the list, dock apps (show/hide, reorder), people, watched, backup/restore, Samsung TV settings, refresh, reset.
+  services, services in the list, dock apps (show/hide, reorder), people, backup/restore, Samsung TV settings, refresh, reset.
 
 ## Back to BigTuna Home after an app closes
 
