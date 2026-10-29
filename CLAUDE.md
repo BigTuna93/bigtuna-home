@@ -100,8 +100,11 @@ which files are TV-specific), then the "Not possible on Tizen 5.5" findings belo
 ## Back to BigTuna Home after an app closes
 
 - **The background helper** (`app/service/watch.js`, `tizen:service` `BigTunaHom.Watch`, approach from Skylight, MIT) keeps running
-  while the TV freezes the page. The page sends `watch` (app id + Samsung STORE id from `STORE_IDS` in tv.js); the helper polls the
-  TV's status service every 0.5 s and resumes BigTuna with `eden_resume` (no reload) once the app leaves the screen (settles 0.8 s).
+  while the TV freezes the page. The page sends `watch` (app id + Samsung STORE id from `STORE_IDS` in tv.js); the helper asks the
+  TV's status service every 0.4 s with up to two questions in flight (each takes ~1 s to answer; answers are used in the order
+  asked) and resumes BigTuna with `eden_resume` (no reload). **A closed app (two not-running answers in a row) brings BigTuna back
+  at once:** an extra 0.8 s settle + checking the other apps let Samsung's home bar appear first (measured 2026-10-28: 1.4 s →
+  0.4 s, seamless again). Still running but off screen (YouTube) keeps the 0.8 s settle + check of the other apps.
   Messages go over its port (fast) and as a service request; it acts on each once. Hardening: refuses requests with an http(s)
   Origin, accepts only well-formed app ids / numeric store ids. Commands: watch, back, hello (the Home-button `away`/`pause`
   path was removed, 2026-10-28). **Don't gate the port behind a code learned from service requests:** tried 2026-10-28 (to stop

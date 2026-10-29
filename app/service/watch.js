@@ -4,9 +4,10 @@
  * heavy app is up). Its jobs:
  *
  *  1. Watch an app BigTuna opened, through the TV's own status service, and bring BigTuna back when that app leaves
- *     the screen (checked every half second). The status service (http://127.0.0.1:8001/api/v2/applications/<STORE id>) says whether an app is
+ *     the screen (asked every 0.4 s, two questions at a time). The status service (http://127.0.0.1:8001/api/v2/applications/<STORE id>) says whether an app is
  *     running and whether it is on screen. On this TV it only knows apps by their Samsung store id, which the page
  *     sends along. Exiting YouTube never closes it (it only leaves the screen), so "left the screen" is the signal.
+ *     A closed app brings BigTuna back at once; any delay there lets Samsung's home bar appear first.
  *  (A Home-button return was tried and removed: on Tizen 5.5, Home opens Samsung's bar over the app, so nothing
  *  leaves the screen.)
  *
@@ -93,29 +94,47 @@ function stop(why) {
 function watch(app, store, shown) {
   stop('another app was opened');
   if (!store) { log('no store id for ' + app + ': the page watches it instead'); return; }
-  job = {app: app, store: store, shown: shown, seen: false, hiddenSince: 0, stops: 0, busy: false, started: Date.now(), timer: null};
+  job = {app: app, store: store, shown: shown, seen: false, hiddenSince: 0, stops: 0, asked: 0, heard: 0, inFlight: 0,
+         busy: false, started: Date.now(), timer: null};
   log('watching ' + app + ' (' + store + ')');
-  job.timer = setInterval(check, 500);
+  job.timer = setInterval(check, 400);
 }
 
+/**
+ * The TV's status service takes about a second to answer, so up to two questions are in the air at once (a new one every
+ * 0.4 s): an exit is heard about twice as soon. The order they were asked in decides which answer counts.
+ */
 function check() {
   var j = job;
-  if (!j || j.busy) return;
+  if (!j || j.busy || j.inFlight >= 2) return;
   var age = Date.now() - j.started;
   if (age > MAX_WATCH_MS) { stop('6 hours passed'); return; }
-  j.busy = true;
+  var n = ++j.asked;
+  j.inFlight++;
   state(j.store, function (st) {
-    j.busy = false;
-    if (job !== j || !st) return;
+    j.inFlight--;
+    if (job !== j || j.busy || !st || n < j.heard) return;   // gone, busy, no answer, or older than one already used
+    j.heard = n;
     if (st.running && st.visible) {
       if (!j.seen) log(j.app + ' is on screen');
       j.seen = true; j.hiddenSince = 0; j.stops = 0;
       return;
     }
     if (!j.seen) { if (age > 30000) stop('it never came on screen'); return; }
-    if (!st.running && ++j.stops < 2) return;   // two answers in a row, so a hiccup isn't an exit
-    // Off screen (or closed). Give the screen a moment, then see whether another of your apps took it.
-    if (!j.hiddenSince) { j.hiddenSince = Date.now(); log(j.app + (st.running ? ' left the screen' : ' closed')); return; }
+    if (!st.running) {
+      // Closed (two answers in a row, so a hiccup isn't an exit): back at once. A closed app leaves nothing to wait
+      // for, and every moment here is one in which Samsung's bar can appear.
+      if (++j.stops < 2) { log(j.app + ' says it isn\'t running'); return; }
+      var gone = j.app;
+      log(gone + ' closed');
+      stop();
+      bringBack(gone + ' closed');
+      return;
+    }
+    // Still running but off screen (YouTube after Back: its engine never closes). Give the screen a moment, then see
+    // whether another of your apps took it.
+    j.stops = 0;
+    if (!j.hiddenSince) { j.hiddenSince = Date.now(); log(j.app + ' left the screen'); return; }
     if (Date.now() - j.hiddenSince < 800) return;
     j.busy = true;
     visibleAmong(j.shown, j.store, function (vis) {
