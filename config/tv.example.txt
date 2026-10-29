@@ -1,0 +1,7 @@
+# Copy this file to config/tv.txt and fill it in (config/tv.txt stays on your Mac; it's never uploaded).
+# The TV's IP address: on the TV, Settings > General > Network > Network Status > IP Settings.
+# Reserving it in your router keeps it from changing.
+TV_IP=192.168.1.50
+# Optional, for turning the TV on from the Mac (python3 tools/remote.py wake).
+# python3 tools/remote.py mac shows it while the TV is on.
+TV_MAC=

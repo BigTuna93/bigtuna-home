@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://bigtuna.home/tv" version="1.0.0" viewmodes="maximized">
+    <!-- Tizen's package id must be exactly 10 letters or digits (the TV refuses anything else with "Parsing error"). -->
+    <tizen:application id="BigTunaHom.BigTunaHome" package="BigTunaHom" required_version="3.0"/>
+    <name>BigTuna Home</name>
+    <author>BigTuna</author>
+    <description>A clean, ad-free home screen with top-rated movies on your services.</description>
+    <content src="index.html"/>
+    <icon src="icon.png"/>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <feature name="http://tizen.org/feature/web.service"/>
+    <!-- The background helper (service/watch.js): brings BigTuna Home back when an app it opened leaves the screen,
+         and after the Home button. Runs as its own process, so it works while the TV freezes the home screen page. -->
+    <tizen:service id="BigTunaHom.Watch" auto-restart="true">
+        <tizen:content src="service/watch.js"/>
+        <tizen:name>BigTunaWatch</tizen:name>
+        <tizen:description>Brings BigTuna Home back after an app closes or Home is pressed.</tizen:description>
+    </tizen:service>
+    <!-- Resuming BigTuna Home (from the helper) brings it straight back instead of reloading it. -->
+    <tizen:app-control>
+        <tizen:src name="index.html" reload="disable"/>
+        <tizen:operation name="http://samsung.com/appcontrol/operation/eden_resume"/>
+    </tizen:app-control>
+    <!-- The only places the app talks to: movie data, movie images, ratings, weather. -->
+    <access origin="https://api.themoviedb.org" subdomains="false"/>
+    <access origin="https://image.tmdb.org" subdomains="false"/>
+    <access origin="https://www.omdbapi.com" subdomains="false"/>
+    <access origin="https://api.open-meteo.com" subdomains="false"/>
+    <!-- The background helper, on the TV itself (127.0.0.1 only). -->
+    <access origin="http://127.0.0.1:8130" subdomains="false"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://developer.samsung.com/privilege/network.public"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.info"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.read"/>
+    <tizen:privilege name="http://tizen.org/privilege/filesystem.write"/>
+    <tizen:privilege name="http://tizen.org/privilege/mediastorage"/>
+    <tizen:profile name="tv-samsung"/>
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="enable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

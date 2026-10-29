@@ -1,0 +1,9 @@
+build/
+config/keys.txt
+.DS_Store
+config/remote-token.txt
+.claude/settings.local.json
+# Samsung's package catalog left over from the toolchain setup (not part of the app)
+pkg_list_macos-64
+config/tv.txt
+CLAUDE.local.md

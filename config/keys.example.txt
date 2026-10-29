@@ -1,0 +1,6 @@
+# Copy this file to config/keys.txt and paste your own free keys after the = signs (no spaces, no quotes).
+# config/keys.txt stays on your Mac; it's never uploaded. Without keys the app shows sample movies.
+# TMDB: make a free account at themoviedb.org, then Settings > API > "API Read Access Token" (the long one).
+TMDB_READ_TOKEN=
+# OMDb: request a free key at omdbapi.com/apikey.aspx (1,000 lookups a day).
+OMDB_KEY=

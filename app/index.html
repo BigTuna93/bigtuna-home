@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080, user-scalable=no">
+  <!-- Only the app's own scripts run; images and data come only from the services it uses (file: = the TV's app icons). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: https://image.tmdb.org; connect-src 'self' file: http://127.0.0.1:8130 https://api.themoviedb.org https://www.omdbapi.com https://api.open-meteo.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>BigTuna Home</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="theme-dark">
+  <div id="screen">
+    <div class="backdrop" id="bgA"></div>
+    <div class="backdrop" id="bgB"></div>
+    <div class="scrim"></div>
+
+    <header class="top">
+      <div class="brand"><span class="brand-strong">BigTuna</span><span class="brand-light">Home</span><span class="who" id="who"></span><span class="limit" id="limit" hidden><span class="i">i</span>Daily ratings limit reached · showing TMDB ratings until it resets</span></div>
+      <div class="clock"><div id="time"></div><div id="date"></div><div id="weather"></div></div>
+    </header>
+
+    <section class="hero" id="hero">
+      <div class="eyebrow" id="heroEyebrow"></div>
+      <h1 id="heroTitle"></h1>
+      <div class="meta" id="heroMeta"></div>
+      <div class="scores" id="heroScores"></div>
+      <p class="overview" id="heroOverview"></p>
+      <div class="where" id="heroWhere"></div>
+    </section>
+
+    <nav class="filters" id="filters"></nav>
+    <section class="row-wrap"><div class="row" id="row"></div><div class="row-note" id="rowNote"></div></section>
+
+    <footer class="dock-wrap"><div class="dock" id="dock"></div></footer>
+
+    <div class="cover" id="cover"></div>
+    <div class="overlay" id="detail" hidden></div>
+    <div class="overlay" id="picker" hidden></div>
+    <div class="overlay" id="settings" hidden></div>
+    <div class="overlay" id="input" hidden></div>
+    <div class="night" id="night" hidden><div class="night-clock" id="nightClock"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="js/keys.js"></script>
+  <script src="js/tv.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/movies.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/diag-config.js"></script>
+  <script src="js/diag.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

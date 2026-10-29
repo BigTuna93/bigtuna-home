@@ -1,0 +1,239 @@
+/* BigTuna Home. Laid out for the TV's 1920 x 1080 page; no live blur (slow on TV graphics chips). */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; }
+body {
+  font-family: "SamsungOne", "Samsung Sans", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg); color: var(--fg);
+}
+.theme-dark {
+  --bg: #0B0C0F; --fg: #F5F5F7; --muted: rgba(245,245,247,.62); --faint: rgba(245,245,247,.38);
+  --chip: rgba(255,255,255,.10); --chip-on: #F5F5F7; --chip-on-fg: #0B0C0F;
+  --panel: #17181C; --panel-2: #22242A; --line: rgba(255,255,255,.10);
+  --dock: rgba(28,29,34,.78); --focus: #FFFFFF;
+  --scrim-side: linear-gradient(90deg, rgba(11,12,15,.96) 0%, rgba(11,12,15,.82) 34%, rgba(11,12,15,.25) 68%, rgba(11,12,15,.05) 100%);
+  --scrim-low: linear-gradient(0deg, rgba(11,12,15,1) 0%, rgba(11,12,15,.92) 30%, rgba(11,12,15,0) 62%);
+}
+.theme-light {
+  --bg: #F2F2F5; --fg: #111114; --muted: rgba(17,17,20,.62); --faint: rgba(17,17,20,.4);
+  --chip: rgba(0,0,0,.07); --chip-on: #111114; --chip-on-fg: #FFFFFF;
+  --panel: #FFFFFF; --panel-2: #ECECF0; --line: rgba(0,0,0,.09);
+  --dock: rgba(255,255,255,.86); --focus: #111114;
+  --scrim-side: linear-gradient(90deg, rgba(242,242,245,.97) 0%, rgba(242,242,245,.86) 34%, rgba(242,242,245,.3) 68%, rgba(242,242,245,.06) 100%);
+  --scrim-low: linear-gradient(0deg, rgba(242,242,245,1) 0%, rgba(242,242,245,.93) 30%, rgba(242,242,245,0) 62%);
+}
+
+#screen { position: relative; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; }
+
+/* Background: the highlighted movie's artwork, two layers that crossfade. */
+.backdrop { position: absolute; top: 0; right: 0; width: 1920px; height: 1080px; background: center/cover no-repeat; opacity: 0; transition: opacity .45s ease; }
+.backdrop.on { opacity: 1; }
+.scrim { position: absolute; inset: 0; top: 0; left: 0; right: 0; bottom: 0; background: var(--scrim-low), var(--scrim-side); }
+.no-anim .backdrop, .no-anim * { transition: none !important; }
+
+/* Header */
+.top { position: absolute; top: 52px; left: 96px; right: 96px; display: flex; justify-content: space-between; align-items: flex-start; }
+.brand { font-size: 30px; letter-spacing: .01em; line-height: 1; }
+.brand-strong { font-weight: 700; }
+.brand-light { font-weight: 300; margin-left: 8px; color: var(--muted); }
+.clock { text-align: right; line-height: 1.15; }
+#time { font-size: 34px; font-weight: 600; letter-spacing: .01em; }
+#date { font-size: 20px; color: var(--muted); margin-top: 4px; }
+
+/* Hero: the highlighted movie */
+.hero { position: absolute; top: 168px; left: 96px; width: 980px; }
+.eyebrow { font-size: 19px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.hero h1 { font-size: 68px; font-weight: 700; line-height: 1.05; margin-top: 14px; letter-spacing: -.01em;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.meta { font-size: 22px; color: var(--muted); margin-top: 16px; }
+.meta .rated { display: inline-block; border: 1.5px solid var(--faint); border-radius: 5px; padding: 0 7px; font-size: 17px; line-height: 24px; margin-left: 4px; vertical-align: 2px; }
+.scores { display: flex; align-items: center; margin-top: 22px; }
+.score { display: flex; align-items: center; margin-right: 34px; }
+.badge { font-size: 16px; font-weight: 800; border-radius: 5px; padding: 3px 7px; margin-right: 12px; letter-spacing: .02em; }
+.badge.imdb { background: #F5C518; color: #000; }
+.badge.mc { color: #fff; min-width: 46px; text-align: center; font-size: 22px; padding: 4px 8px; }
+.mc-good { background: #00B140; } .mc-mixed { background: #FFBD3F; color: #222 !important; } .mc-bad { background: #FF4F4F; } .mc-none { background: var(--chip); color: var(--muted) !important; }
+.score .num { font-size: 30px; font-weight: 700; }
+.score .of { font-size: 20px; color: var(--muted); margin-left: 3px; }
+.score .sub { font-size: 18px; color: var(--muted); margin-left: 12px; }
+.overview { font-size: 22px; line-height: 1.45; color: var(--muted); margin-top: 20px; max-width: 860px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.where { margin-top: 18px; font-size: 19px; color: var(--muted); display: flex; align-items: center; }
+.svc { display: inline-flex; align-items: center; background: var(--chip); border-radius: 999px; padding: 6px 14px 6px 6px; margin-left: 10px; color: var(--fg); font-size: 18px; font-weight: 500; }
+.svc img, .svc .dot { width: 28px; height: 28px; border-radius: 7px; margin-right: 9px; }
+.svc .dot { display: inline-block; background: var(--faint); }
+
+/* Filters */
+.filters { position: absolute; top: 560px; left: 96px; right: 96px; display: flex; align-items: center; }
+.chip { font-size: 20px; font-weight: 500; padding: 10px 20px; border-radius: 999px; background: var(--chip); color: var(--fg); margin-right: 12px; white-space: nowrap; transition: transform .15s ease; }
+.chip .k { color: var(--muted); margin-right: 6px; font-weight: 400; }
+.chip.active { background: var(--chip-on); color: var(--chip-on-fg); }
+.chip.active .k { color: inherit; opacity: .6; }
+.seg { display: flex; background: var(--chip); border-radius: 999px; padding: 4px; margin-left: auto; }
+.seg span { font-size: 19px; font-weight: 500; padding: 7px 18px; border-radius: 999px; color: var(--muted); }
+.seg span.sel { background: var(--panel-2); color: var(--fg); }
+.theme-light .seg span.sel { background: #fff; }
+.focus-zone .chip.focus, .focus-zone .seg.focus { box-shadow: 0 0 0 3px var(--focus); transform: scale(1.05); }
+
+/* The top movies row */
+.row-wrap { position: absolute; top: 612px; left: 0; right: 0; height: 300px; overflow: hidden; }
+.row { position: absolute; top: 24px; left: 96px; display: flex; transition: transform .16s ease-out; white-space: nowrap; }
+.card { position: relative; width: 154px; height: 231px; margin-right: 22px; border-radius: 12px; overflow: hidden; flex: none;
+  background: var(--panel-2) center/cover no-repeat; transition: transform .1s ease-out; }
+.card .rank { position: absolute; left: 0; top: 0; background: rgba(0,0,0,.72); color: #fff; font-size: 18px; font-weight: 700; padding: 5px 11px; border-bottom-right-radius: 10px; }
+.card .ph { position: absolute; left: 0; right: 0; bottom: 0; top: 0; padding: 16px 14px; font-size: 19px; font-weight: 700; color: #fff; white-space: normal; display: flex; align-items: flex-end; line-height: 1.2; }
+.card .rate { position: absolute; right: 8px; top: 8px; background: rgba(0,0,0,.72); color: #fff; font-size: 16px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.focus-zone .card.focus { transform: scale(1.09); box-shadow: 0 0 0 4px var(--focus); z-index: 2; }
+.card.skeleton { background: var(--chip); }
+.row-note { position: absolute; top: 116px; left: 96px; font-size: 24px; color: var(--muted); }
+
+/* Dock */
+.dock-wrap { position: absolute; left: 0; right: 0; bottom: 40px; display: flex; justify-content: center; }
+.dock { position: relative; height: 116px; background: var(--dock); border: 1px solid var(--line); border-radius: 30px; overflow: hidden; }
+.dock-inner { position: absolute; left: 14px; top: 14px; display: flex; align-items: center; transition: transform .16s ease-out; }
+.app { position: relative; width: 150px; height: 86px; border-radius: 16px; margin: 0 7px; flex: none; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font-size: 20px; font-weight: 700; color: #fff; text-align: center; transition: transform .1s ease-out; }
+.app img { max-width: 100%; max-height: 100%; }
+.app .label { padding: 0 10px; line-height: 1.1; }
+.app.system { background: var(--panel-2); color: var(--fg); font-weight: 600; font-size: 18px; }
+.app.system .ico { font-size: 30px; display: block; margin-bottom: 2px; font-weight: 400; }
+.focus-zone .app.focus { transform: scale(1.1); box-shadow: 0 0 0 4px var(--focus); z-index: 2; }
+
+/* Simple layout: a big clock and the apps as a larger grid; no movies. */
+.simple .hero, .simple .filters, .simple .row-wrap, .simple .backdrop { display: none; }
+.simple .scrim { background: radial-gradient(ellipse at 50% 0%, var(--chip) 0%, transparent 65%); }
+/* Mountains behind the Simple layout: night for dark mode, dawn for light. A drawing, so it's sharp and tiny. */
+.scenic .scrim { background: url(../img/mountains-dark.svg) center/cover no-repeat; }
+.theme-light.scenic .scrim { background-image: url(../img/mountains-light.svg); }
+.scenic .clock { text-shadow: 0 2px 24px rgba(0,0,0,.35); }
+.theme-light.scenic .clock { text-shadow: 0 2px 24px rgba(255,255,255,.4); }
+.scenic .dock { background: rgba(8,12,20,.42); border-color: rgba(255,255,255,.08); }
+.theme-light.scenic .dock { background: rgba(255,255,255,.42); border-color: rgba(0,0,0,.06); }
+.simple .clock { position: absolute; left: 0; right: 0; top: 150px; text-align: center; }
+.simple #time { font-size: 132px; font-weight: 300; letter-spacing: -.02em; }
+.simple #date { font-size: 30px; margin-top: 10px; }
+.simple .dock-wrap { top: 470px; bottom: auto; }
+.simple .dock { height: auto; padding: 22px; }
+.simple .dock-inner { position: static; flex-wrap: wrap; justify-content: center; transform: none; }
+.simple .app { width: 200px; height: 112px; margin: 8px; border-radius: 20px; font-size: 24px; }
+.simple .app.system { font-size: 21px; }
+.simple .app.system .ico { font-size: 36px; }
+.dock-name { position: absolute; bottom: 4px; left: 0; right: 0; text-align: center; font-size: 18px; color: var(--muted); }
+
+/* Overlays */
+.overlay { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.62); z-index: 10; }
+.overlay[hidden] { display: none; }
+.sheet { position: absolute; background: var(--panel); color: var(--fg); border-radius: 28px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+
+/* Detail card */
+.detail-sheet { left: 210px; right: 210px; top: 120px; bottom: 120px; display: flex; padding: 48px; overflow: hidden; }
+.detail-sheet .poster { width: 360px; height: 540px; border-radius: 18px; background: var(--panel-2) center/cover no-repeat; flex: none; position: relative; overflow: hidden; }
+.detail-sheet .info { margin-left: 52px; flex: 1; min-width: 0; }
+.detail-sheet h2 { font-size: 52px; font-weight: 700; line-height: 1.08; }
+.detail-sheet .meta { color: var(--muted); }
+.detail-sheet .plot { font-size: 23px; line-height: 1.5; margin-top: 22px; color: var(--fg); opacity: .86;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+.detail-sheet .credits { font-size: 19px; color: var(--muted); margin-top: 16px; line-height: 1.5; }
+.detail-sheet .credits b { color: var(--fg); font-weight: 600; }
+.detail-sheet .where { margin-top: 22px; flex-wrap: wrap; }
+.buttons { display: flex; margin-top: 34px; }
+.btn { font-size: 23px; font-weight: 600; padding: 16px 34px; border-radius: 14px; background: var(--panel-2); color: var(--fg); margin-right: 18px; transition: transform .15s ease; }
+.btn.primary { background: var(--chip-on); color: var(--chip-on-fg); }
+.btn.disabled { opacity: .45; }
+.btn.focus { box-shadow: 0 0 0 4px var(--focus); transform: scale(1.05); }
+.attrib { position: absolute; right: 48px; bottom: 28px; font-size: 15px; color: var(--faint); }
+
+/* Picker and settings lists */
+.list-sheet { top: 90px; bottom: 90px; width: 640px; padding: 40px 0 30px; display: flex; flex-direction: column; }
+.picker-sheet { left: 640px; }
+.settings-sheet { right: 60px; width: 820px; }
+.list-sheet h3 { font-size: 34px; font-weight: 700; padding: 0 44px 8px; }
+.list-sheet .hint { font-size: 18px; color: var(--muted); padding: 0 44px 18px; }
+.list { position: relative; flex: 1; overflow: hidden; }
+.list-sheet .more { position: absolute; left: 0; right: 0; height: 64px; text-align: center; font-size: 26px; color: var(--muted); pointer-events: none; }
+.list-sheet .more.up { background: linear-gradient(180deg, var(--panel) 25%, transparent); line-height: 30px; }
+.list-sheet .more.down { background: linear-gradient(0deg, var(--panel) 25%, transparent); line-height: 98px; }
+.list-inner { position: absolute; left: 0; right: 0; top: 0; -webkit-user-select: none; user-select: none; }
+.item { display: flex; align-items: center; justify-content: space-between; font-size: 24px; padding: 0 44px; height: 68px; }
+.item .val { color: var(--muted); font-size: 22px; }
+.item .tag { font-size: 16px; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; margin-left: 12px; }
+.item .check { width: 30px; height: 30px; border-radius: 9px; border: 2px solid var(--faint); display: inline-block; flex: none; text-align: center; line-height: 26px; font-size: 20px; font-weight: 800; }
+.item .check.on { background: var(--chip-on); border-color: var(--chip-on); color: var(--chip-on-fg); }
+.item .left { display: flex; align-items: center; min-width: 0; }
+.item .left img, .item .left .dot { width: 34px; height: 34px; border-radius: 8px; margin-right: 16px; flex: none; }
+.item .left .dot { background: var(--panel-2); }
+.item.section { height: 54px; font-size: 17px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); padding-top: 14px; }
+.item.focus { background: var(--chip-on); color: var(--chip-on-fg); }
+.item.focus .val, .item.focus .tag { color: inherit; opacity: .7; border-color: currentColor; }
+.item.focus .check { border-color: var(--chip-on-fg); }
+.item.focus .check.on { background: var(--chip-on-fg); color: var(--chip-on); }
+.item.sel .val { color: var(--fg); }
+.item .about { font-size: 18px; color: var(--muted); line-height: 1.45; white-space: normal; padding: 10px 0; word-wrap: break-word; overflow-wrap: break-word; min-width: 0; }
+
+/* Toast */
+.toast { position: absolute; left: 50%; top: 60px; transform: translate(-50%, -30px); background: var(--chip-on); color: var(--chip-on-fg); font-size: 22px; font-weight: 600;
+  padding: 16px 30px; border-radius: 999px; opacity: 0; transition: opacity .25s ease, transform .25s ease; z-index: 20; white-space: nowrap; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* People */
+.avatar { display: inline-block; width: 34px; height: 34px; border-radius: 50%; margin-right: 16px; flex: none; color: #fff; font-size: 18px; font-weight: 700; line-height: 34px; text-align: center; }
+.who { display: inline-flex; align-items: center; margin-left: 22px; font-size: 22px; font-weight: 500; color: var(--muted); vertical-align: 3px; }
+.who .avatar { width: 30px; height: 30px; line-height: 30px; font-size: 16px; margin-right: 10px; }
+.input-sheet { left: 560px; right: 560px; top: 340px; padding: 44px; }
+.input-sheet h3 { font-size: 34px; font-weight: 700; margin-bottom: 24px; }
+.input-sheet input { width: 100%; font: inherit; font-size: 30px; padding: 16px 20px; border-radius: 14px; border: 3px solid var(--focus); background: var(--panel-2); color: var(--fg); outline: none; }
+.input-sheet .hint { font-size: 18px; color: var(--muted); margin-top: 16px; }
+
+/* Seen: a small, quiet check on the poster */
+.card .seen { position: absolute; left: 8px; bottom: 8px; width: 30px; height: 30px; border-radius: 50%; background: rgba(0,0,0,.62); color: #fff; font-size: 17px; font-weight: 800; line-height: 30px; text-align: center; }
+.seen-tag { font-size: 18px; color: var(--muted); border: 1.5px solid var(--faint); border-radius: 6px; padding: 1px 8px; margin-left: 4px; }
+
+/* Weather, under the date */
+#weather { font-size: 20px; color: var(--muted); margin-top: 4px; white-space: pre; }
+.simple #weather { font-size: 26px; margin-top: 8px; }
+
+/* Night screen: almost black, a dim clock that drifts slowly */
+.night { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #000; z-index: 30; display: flex; align-items: center; justify-content: center; }
+.night[hidden] { display: none; }
+.night-clock { color: rgba(255,255,255,.32); font-size: 150px; font-weight: 200; text-align: center; line-height: 1.1; }
+.night-date { font-size: 32px; font-weight: 400; margin-top: 12px; }
+
+/* Daily ratings limit: a small, quiet note by the name */
+.limit { display: inline-flex; align-items: center; margin-left: 22px; font-size: 18px; color: var(--muted); vertical-align: 4px; }
+.limit[hidden] { display: none; }
+.limit .i { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; font-size: 14px; font-weight: 700;
+  line-height: 19px; text-align: center; margin-right: 8px; }
+
+/* Tiles with the app's own logo: the logo fills the tile (no brand-colour box behind it). */
+.app.has-icon { background: var(--panel-2); }
+.app.has-icon img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; display: block; }
+.app.has-icon.cover img { object-fit: cover; }
+
+/* Test builds only (diag.js): a label so they're never mistaken for the normal one */
+.test-build { position: absolute; left: 24px; bottom: 10px; font-size: 15px; font-weight: 600; color: #fff; background: #C2410C;
+  padding: 3px 10px; border-radius: 6px; z-index: 40; opacity: .85; }
+
+/* Speed: logos are drawn once into canvases; quick presses switch animations off; sliding rows get their own layer */
+.app canvas { display: block; width: 100%; height: 100%; }
+.fast *, .fast .backdrop { transition: none !important; }
+.row, .dock-inner { will-change: transform; }
+
+/* TMDB's score, shown when the daily IMDb/Metacritic limit is reached */
+.badge.tmdb { background: #01B4E4; color: #0D253F; }
+
+/* Type filter: the Clear chip, and a small tag on shows in mixed lists */
+.chip.clear { background: transparent; border: 1.5px solid var(--faint); color: var(--muted); padding: 8.5px 18px; }
+.card .kindtag { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.66); color: #fff; font-size: 13px; font-weight: 800;
+  letter-spacing: .08em; padding: 3px 7px; border-radius: 5px; }
+
+/* Before anyone is picked ("Who's watching?" at the start): only the name, the clock and a calm scene (mountains, or
+   plain with Background → Plain). Movies and apps fade in once a person is picked. Hidden, not blurred: blur is slow on the TV. */
+.hero, .filters, .row-wrap, .dock-wrap { transition: opacity .4s ease; }
+.welcome .hero, .welcome .filters, .welcome .row-wrap, .welcome .dock-wrap, .welcome .backdrop, .welcome #who, .welcome #limit { opacity: 0; }
+
+/* Changing layout (Full <-> Simple): one plain sheet in the background colour fades over the screen, the layout changes
+   under it, and it fades away. One layer is all the TV's graphics chip has to fade (fading every part at once stuttered).
+   It sits under Settings and pop-ups. */
+.cover { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--bg); opacity: 0; z-index: 5;
+  pointer-events: none; transition: opacity .2s ease-out; will-change: opacity; }
+.cover.on { opacity: 1; transition: opacity .18s ease-in; }
