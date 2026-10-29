@@ -102,8 +102,11 @@ which files are TV-specific), then the "Not possible on Tizen 5.5" findings belo
 - **The background helper** (`app/service/watch.js`, `tizen:service` `BigTunaHom.Watch`, approach from Skylight, MIT) keeps running
   while the TV freezes the page. The page sends `watch` (app id + Samsung STORE id from `STORE_IDS` in tv.js); the helper polls the
   TV's status service every 0.5 s and resumes BigTuna with `eden_resume` (no reload) once the app leaves the screen (settles 0.8 s).
-  Hardening: refuses requests with an http(s) Origin, accepts only well-formed app ids / numeric store ids, caps pause, ignores the
-  duplicate of each message (sent via its port and a service request). Apps without a store id use the page watcher (`watchFor`/`checkReturn`).
+  Messages go over its port (fast) and as a service request; it acts on each once. Hardening: refuses requests with an http(s)
+  Origin, accepts only well-formed app ids / numeric store ids. Commands: watch, back, hello (the Home-button `away`/`pause`
+  path was removed, 2026-10-28). **Don't gate the port behind a code learned from service requests:** tried 2026-10-28 (to stop
+  websites in the TV's browser from sending commands); the return stopped being seamless (Samsung's bar showed first), so it
+  was undone. The remaining risk is low: a site open in the TV's browser could send watch/back/hello or read `/log` (recent app ids). Apps without a store id use the page watcher (`watchFor`/`checkReturn`).
 - **The TV's status service:** `GET http://<tv>:8001/api/v2/applications/<STORE id>` → `{running, visible}`, no token. It needs the
   Samsung STORE id, not the Tizen app id (`0 was_execute <tizen id>` logs `app_id[<store id>]`). YouTube's engine never closes; it
   reports visible=false after Back, which is the exit signal.
@@ -118,10 +121,11 @@ which files are TV-specific), then the "Not possible on Tizen 5.5" findings belo
   template literals, fetch, async). No `backdrop-filter` or heavy blur; animate only transform/opacity, and as few large layers as possible.
 - No ads, no tracking, no third-party scripts or web fonts. Network: only TMDB, image.tmdb.org, OMDb, Open-Meteo and the helper (127.0.0.1:8130).
 - Security: config.xml `<access>` lists only those hosts and index.html has a CSP meta (scripts 'self'/file: only, inline styles allowed,
-  images 'self'/file:/data:/image.tmdb.org). A new host needs adding in BOTH places. Every image URL goes through `img()` in app.js.
+  images 'self'/file:/data:/image.tmdb.org). A new host needs adding in BOTH places. Every image URL goes through `img()` in app.js. Row posters use TMDB's w185 size (cards are 154 px), the detail card w500, backdrops w1280.
   Backup restore takes only valid `bth.*` keys; `Store.get` falls back to defaults for damaged values. Remove localStorage entries via
   `Store.keys()` + `Store.removeAll()` (never while looping over localStorage). Test builds (`--diag`) add `'unsafe-eval'` and the Mac's
-  report address; never ship them as the everyday build.
+  report address; never ship them as the everyday build (everyday builds replace js/diag.js with a one-line stand-in).
+  TMDB/OMDb ids are checked (`^\d{1,10}$`, `^tv:\d{1,10}$`, `^tt\d{5,10}$`) before going into a request address.
 - Keep TMDB/JustWatch/OMDb attribution (detail card, Settings → About, README) and the third-party notices.
 - Speed: logos drawn once into canvases (`drawnTiles`), YouTube/YouTube TV/Netflix/Prime drawn as brand tiles (`BRANDS`), fast mode
   (quick presses turn transitions off), highlight drawn once per frame. Slowest 10% of presses ~36 ms on the TV.

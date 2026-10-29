@@ -43,7 +43,7 @@ var Movies = (function () {
   }
 
   function omdb(imdbId, done) {
-    if (omdbOut()) { done(null); return; }
+    if (omdbOut() || !/^tt\d{5,10}$/.test(String(imdbId))) { done(null); return; }   // only real IMDb ids go into the address
     get('https://www.omdbapi.com/?i=' + imdbId + '&apikey=' + KEYS.omdb, {}, function (r, status, body) {
       if (body && body.Response === 'False' && /limit/i.test(body.Error || '')) limitReached();
       done(r && r.Response === 'True' ? r : null);
@@ -141,6 +141,7 @@ var Movies = (function () {
 
   function movie(id, done) {
     if (/^tv:/.test(String(id))) { show(id, done); return; }
+    if (!/^\d{1,10}$/.test(String(id))) { done(null); return; }   // only real TMDB ids (a saved list could hold anything)
     var key = 'm.' + id, cached = Store.cacheGet(key, 5 * DAY);
     if (cached && cached.tmdbVotes !== undefined) { done(cached); return; }
     tmdb('/movie/' + id, {append_to_response: 'external_ids,watch/providers'}, function (d) {
@@ -156,7 +157,7 @@ var Movies = (function () {
       var m = {
         id: d.id, title: d.title, year: (d.release_date || '').slice(0, 4), runtime: d.runtime || 0,
         genres: (d.genres || []).map(function (g) { return g.name; }), overview: d.overview || '',
-        poster: d.poster_path ? IMG + 'w342' + d.poster_path : '', posterLarge: d.poster_path ? IMG + 'w500' + d.poster_path : '',
+        poster: d.poster_path ? IMG + 'w185' + d.poster_path : '', posterLarge: d.poster_path ? IMG + 'w500' + d.poster_path : '',
         backdrop: d.backdrop_path ? IMG + 'w1280' + d.backdrop_path : '',
         imdbId: d.imdb_id || (d.external_ids || {}).imdb_id || '', where: where,
         tmdbRating: Math.round((d.vote_average || 0) * 10) / 10, tmdbVotes: d.vote_count || 0   // the stand-in when OMDb's limit is reached
@@ -190,7 +191,7 @@ var Movies = (function () {
         ongoing: !!d.in_production, seasons: d.number_of_seasons || 0, runtime: (d.episode_run_time || [])[0] || 0,
         genres: (d.genres || []).map(function (g) { return g.name; }), overview: d.overview || '',
         creators: (d.created_by || []).map(function (c) { return c.name; }).slice(0, 3).join(', '),
-        poster: d.poster_path ? IMG + 'w342' + d.poster_path : '', posterLarge: d.poster_path ? IMG + 'w500' + d.poster_path : '',
+        poster: d.poster_path ? IMG + 'w185' + d.poster_path : '', posterLarge: d.poster_path ? IMG + 'w500' + d.poster_path : '',
         backdrop: d.backdrop_path ? IMG + 'w1280' + d.backdrop_path : '',
         imdbId: (d.external_ids || {}).imdb_id || '', where: where,
         tmdbRating: Math.round((d.vote_average || 0) * 10) / 10, tmdbVotes: d.vote_count || 0

@@ -63,6 +63,10 @@ def write_diag(url):
     with open(os.path.join(OUT, 'js', 'diag-config.js'), 'w', encoding='utf-8') as f:
         f.write('window.DIAG = %s;\n' % (json.dumps({'url': url.rstrip('/') + '/report'}) if url else 'null'))
     if not url:
+        # The test code isn't needed: a stand-in with the same (empty) answers, so the TV loads less.
+        with open(os.path.join(OUT, 'js', 'diag.js'), 'w', encoding='utf-8') as f:
+            f.write('/* Test builds only (see app/js/diag.js); off in this build. */\n'
+                    'var Diag = {on: false, attach: function () {}, note: function () {}};\n')
         return
     m = re.match(r'^(http://(?:\d{1,3}\.){3}\d{1,3}:\d{2,5})/?$', url)
     if not m:

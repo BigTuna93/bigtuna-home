@@ -155,7 +155,8 @@ var TV = (function () {
 
   /**
    * Tells the helper something (and starts it if it isn't running): over its local port, and as a service request.
-   * Either is enough; both are tried.
+   * Either is enough; both are tried. (The port is what makes the return seamless: a secret-code lock that made the
+   * helper wait for the service request first was tried, and the return got slower, so Samsung's bar showed.)
    */
   function helper(data) {
     if (!tizen) return;

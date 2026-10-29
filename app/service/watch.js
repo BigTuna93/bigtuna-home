@@ -7,8 +7,8 @@
  *     the screen (checked every half second). The status service (http://127.0.0.1:8001/api/v2/applications/<STORE id>) says whether an app is
  *     running and whether it is on screen. On this TV it only knows apps by their Samsung store id, which the page
  *     sends along. Exiting YouTube never closes it (it only leaves the screen), so "left the screen" is the signal.
- *  2. The Home button: when BigTuna loses the screen without having opened anything, the page says "away"; after a
- *     moment, if none of your apps took the screen, BigTuna comes back. The Samsung tile pauses this for a while.
+ *  (A Home-button return was tried and removed: on Tizen 5.5, Home opens Samsung's bar over the app, so nothing
+ *  leaves the screen.)
  *
  * Bringing BigTuna back uses Samsung's own resume request (eden_resume), so it returns at once instead of reloading.
  * The page talks to it over 127.0.0.1:8130 (only reachable from the TV itself) and through service requests.
@@ -24,14 +24,11 @@ var PORT = 8130;
 var MAX_WATCH_MS = 6 * 60 * 60 * 1000;
 
 var job = null;      // the app being watched: {app, store, shown, seen, hiddenSince, stops, busy, started, timer}
-var away = null;     // after the Home button: {tries, timer}
-var pausedUntil = 0; // the Samsung tile asked to leave Samsung's screen alone until then
-var homeReturn = true;
 var lines = [], startedAt = '';
 
 function log(text) {
   var t = new Date(), two = function (n) { return (n < 10 ? '0' : '') + n; };
-  lines.push(two(t.getHours()) + ':' + two(t.getMinutes()) + ':' + two(t.getSeconds()) + ' ' + text);
+  lines.push(two(t.getHours()) + ':' + two(t.getMinutes()) + ':' + two(t.getSeconds()) + '.' + Math.floor(t.getMilliseconds() / 100) + ' ' + text);
   if (lines.length > 120) lines.shift();
 }
 
@@ -95,7 +92,6 @@ function stop(why) {
 
 function watch(app, store, shown) {
   stop('another app was opened');
-  cancelAway();
   if (!store) { log('no store id for ' + app + ': the page watches it instead'); return; }
   job = {app: app, store: store, shown: shown, seen: false, hiddenSince: 0, stops: 0, busy: false, started: Date.now(), timer: null};
   log('watching ' + app + ' (' + store + ')');
@@ -133,35 +129,6 @@ function check() {
   });
 }
 
-// ---- The Home button ---------------------------------------------------------------------------
-
-function cancelAway() { if (away) { clearTimeout(away.timer); away = null; } }
-
-function onAway(shown) {
-  if (job) return;                                   // an app BigTuna opened has the screen; the watch handles it
-  if (!homeReturn) { log('Home pressed; Home return is off'); return; }
-  if (Date.now() < pausedUntil) { log('Home pressed; leaving Samsung\'s screen alone for now'); return; }
-  cancelAway();
-  away = {tries: 0, timer: null, shown: shown};
-  log('BigTuna left the screen without opening anything (Home)');
-  scheduleAway(1500);
-}
-
-function scheduleAway(ms) {
-  if (!away) return;
-  away.timer = setTimeout(function () {
-    if (!away || job) return;
-    if (Date.now() < pausedUntil) { cancelAway(); return; }
-    visibleAmong(away.shown, '', function (vis) {
-      if (!away) return;
-      if (vis.length) { log(vis[0] + ' is on screen; staying away'); cancelAway(); return; }
-      away.tries++;
-      bringBack('Home was pressed (try ' + away.tries + ')');
-      if (away.tries < 3) scheduleAway(2500); else cancelAway();
-    });
-  }, ms);
-}
-
 // ---- Commands (from the page) ------------------------------------------------------------------
 
 var APP_ID = /^[A-Za-z0-9._-]{1,80}$/, STORE_ID = /^\d{6,16}$/;
@@ -169,21 +136,15 @@ var lastCmd = '', lastAt = 0;
 
 function handle(cmd, p) {
   // The page sends each message two ways (its local port and a service request): act on it once.
-  var key = cmd + '|' + (p.app || '') + '|' + (p.store || '') + '|' + (p.seconds || '');
+  var key = cmd + '|' + (p.app || '') + '|' + (p.store || '');
   if (key === lastCmd && Date.now() - lastAt < 1500) return;
   lastCmd = key; lastAt = Date.now();
   // Only well-formed ids: an app id, and a numeric store id (it goes into a request to the TV's status service).
   var app = APP_ID.test(p.app || '') ? p.app : '', store = STORE_ID.test(p.store || '') ? p.store : '';
   var shown = (p.shown || '').split(',').filter(function (s) { return STORE_ID.test(s); }).slice(0, 60);
-  if (p.homeReturn !== undefined) homeReturn = p.homeReturn !== 'false';
   if (cmd === 'watch') { if (app) watch(app, store, shown); }
-  else if (cmd === 'away') onAway(shown);
-  else if (cmd === 'back') { cancelAway(); stop('BigTuna is on screen'); }
-  else if (cmd === 'pause') {
-    var secs = Math.max(10, Math.min(900, parseInt(p.seconds, 10) || 180));
-    pausedUntil = Date.now() + secs * 1000; cancelAway(); log('leaving Samsung\'s screen alone for ' + secs + ' s');
-  }
-  else if (cmd === 'hello') log('hello from the page (Home return ' + (homeReturn ? 'on' : 'off') + ')');
+  else if (cmd === 'back') stop('BigTuna is on screen');
+  else if (cmd === 'hello') log('hello from the page');
   else if (cmd) log('unknown request: ' + cmd);
 }
 
@@ -197,10 +158,10 @@ var server = http.createServer(function (req, res) {
   if (req.headers.origin) res.setHeader('Access-Control-Allow-Origin', req.headers.origin);   // file:// or null: our page
   if (path === 'log') {
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({since: startedAt, watching: job ? job.app : '', paused: Date.now() < pausedUntil, homeReturn: homeReturn, lines: lines}));
+    res.end(JSON.stringify({since: startedAt, watching: job ? job.app : '', lines: lines}));
     return;
   }
-  if (/^(watch|away|back|pause|hello)$/.test(path)) { handle(path, parsed.query); res.end('ok'); return; }
+  if (/^(watch|back|hello)$/.test(path)) { handle(path, parsed.query); res.end('ok'); return; }
   res.statusCode = 404;
   res.end('not found');
 });
