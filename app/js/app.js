@@ -1522,7 +1522,25 @@
     }, 1500);
   }
 
+  /**
+   * Someone trying the code in a browser with sample data, for the first time: two test people (Alex in Full, Sam in
+   * Simple, Alex with two titles marked seen), so it starts at "Who's watching?" as on the TV. Never on the TV, never
+   * with real keys, and only before any people have been saved.
+   */
+  function samplePeople() {
+    var saved = null;
+    try { saved = localStorage.getItem('bth.people'); } catch (e) { return; }
+    if (TV.isTV || !Movies.sample || saved !== null) return;
+    Store.set('people', [{id: 'p1', name: 'Alex - Full Mode'}, {id: 'p2', name: 'Sam - Simple Mode'}]);
+    Store.set('person', 'p2');
+    Store.set('layout', 'simple');
+    Store.set('person', 'p1');
+    Store.set('layout', 'full');
+    Store.set('watched', [1, 3]);
+  }
+
   function start() {
+    samplePeople();
     S.welcome = Store.get('people').length > 1;
     if (simple()) S.zone = 'dock';
     fitPreview();

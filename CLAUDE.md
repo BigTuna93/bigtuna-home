@@ -77,7 +77,8 @@ CLAUDE.local.md (not shared). Your TV's address and hardware address go in confi
   `q.exclude`); it was a Settings row until 2026-10-28. ✕ Clear resets Genre, Year, Type (to movies) and Seen (to Include) only.
 - **People:** "Who's watching?" at start with 2+ people; each person has their own layout, filters, seen list (✓),
   watchlist and recent apps. While the start picker is open, body class `welcome` hides everything but the brand and clock
-  (mountains behind). Picking someone with the other layout from Settings uses the layout fade.
+  (mountains behind). Picking someone with the other layout from Settings uses the layout fade. `samplePeople()`: in a browser in
+  sample mode with no people saved yet, it adds "Alex - Full Mode" (two titles seen) and "Sam - Simple Mode", so visitors start at the picker. Never on the TV.
 - **Layout fade:** `swapLayout()` fades ONE sheet (`#cover`, background colour, z-index 5, under Settings) over the screen (0.18 s),
   changes the layout under it, waits two frames + 80 ms, then fades it away (0.2 s). Instant with Animations off. Fading every layer at
   once looked smooth on a Mac but stuttered on the TV's graphics chip.

@@ -38,7 +38,8 @@ An AI coding assistant helps a lot: `CLAUDE.md` describes the project for one.
 4. **Turn on Developer Mode** on the TV: Apps, then type 1 2 3 4 5 on the remote, Developer mode On, Host PC IP = your
    Mac's IP address, then restart the TV.
 5. **One-time setup:** `tools/setup-mac.sh` installs Samsung's signing tool and makes your signing certificate.
-6. **Build and install:** `tools/deploy.sh`. Try it in your browser first with `tools/preview.sh`.
+6. **Build and install:** `tools/deploy.sh`. Try it in your browser first with `tools/preview.sh`: without keys (or with
+   `?sample=1` in the address) it shows sample movies and two test people, "Alex - Full Mode" and "Sam - Simple Mode".
 
 Your keys, TV details and certificate stay on your Mac: `config/keys.txt` and `config/tv.txt` are never uploaded.
 
