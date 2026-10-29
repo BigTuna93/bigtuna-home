@@ -2,6 +2,8 @@
 
 A custom home-screen app for a 2020 Samsung TV (Tizen 5.5), built with Claude. Private, machine-specific notes live in
 CLAUDE.local.md (not shared). Your TV's address and hardware address go in config/tv.txt (see config/tv.example.txt).
+Porting to another TV, brand or computer: see "Porting to other TVs and computers" in README.md (effort per platform and
+which files are TV-specific), then the "Not possible on Tizen 5.5" findings below before retrying anything.
 
 ## Hardware
 

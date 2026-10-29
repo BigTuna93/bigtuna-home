@@ -71,6 +71,37 @@ Updates must be signed with the same certificate. To build from another computer
 - Home always opens Samsung's own screen.
 - To have the TV start in BigTuna Home: Settings, General, Smart Features, Autorun Last App: On.
 
+## Porting to other TVs and computers
+
+Built and tested on a 2020 Samsung (Tizen 5.5) with an Apple Silicon Mac. A rough guide to the effort elsewhere
+(1 = follow Getting started, 10 = start over), and which files to change. An AI assistant can do most of this; point it at
+`CLAUDE.md`, which explains how everything works and what was already tried.
+
+| Target | Effort | What changes |
+|---|---|---|
+| Samsung 2020 (Tizen 5.5) | 2–3 | Nothing in the code. Your apps' Samsung store ids may differ (`STORE_IDS` in `app/js/tv.js`; `0 was_execute <app id>` over the developer connection shows them). |
+| Samsung 2017–2019 (Tizen 3–5) | 4–5 | Test the background helper and the TV's status service (port 8001); the automatic return may need adjusting or the older page watcher. |
+| Samsung 2021–2022 (Tizen 6–6.5) | 5–6 | Same install and signing; newer firmware may restrict the status service or background services. |
+| Samsung 2023+ (Tizen 7+) | 6–7 | Needs a Samsung-account certificate (Tizen Studio's Certificate Manager) instead of the plain author certificate; some privileges may not be available. |
+| LG (webOS) | 7–8 | Keep the UI and movie code; replace the TV layer (apps, launching, keys), packaging (`ares` CLI) and installing. The automatic return has no direct equivalent. |
+| Google TV / Android TV / Fire TV | 7 | Rebuild as an Android launcher app (the web UI can run in a WebView). Android lets an app replace the home screen and the Home button outright. |
+| Roku | 9 | Roku apps are written in BrightScript, not web pages: a rewrite. |
+| Vizio, Hisense (VIDAA), most others | 10 | Sideloading your own apps isn't allowed. |
+| Windows or Linux instead of a Mac | 3 | Rewrite `tools/setup-mac.sh` (Samsung's `tizen` CLI exists for both); the signing password is kept by the CLI instead of the Keychain; run the Python commands from `deploy.sh`/`preview.sh` directly on Windows (or use WSL). The Python tools need only Python 3. |
+
+**Where the TV-specific parts are:**
+
+- `app/js/tv.js`: installed apps, launching, Samsung's settings, remote key codes, the helper link, store ids.
+- `app/service/watch.js` + the `tizen:service` and `tizen:app-control` entries in `app/config.xml`: the automatic return.
+- `app/js/backup.js`: the backup file uses Tizen's filesystem (it falls back to the browser's storage elsewhere).
+- `app/config.xml`: the Tizen manifest (app id, privileges, allowed network addresses). The CSP in `app/index.html` must match it.
+- `tools/build.py` (packaging and signing with the `tizen` CLI), `tools/install.py` (Samsung's SDB protocol),
+  `tools/remote.py` (Samsung's network remote and Wake-on-LAN), `tools/setup-mac.sh` (Mac toolchain setup).
+
+**Portable as is:** the layout and styles (`app/css`, most of `app/js/app.js`), the movie pipeline (`app/js/movies.js`,
+TMDB + OMDb), settings and people (`app/js/store.js`), weather, and the browser preview. The code is plain ES5 for the
+2020 TVs' old browser engine; newer platforms can use modern JavaScript.
+
 ## Credits and licence
 
 Ratings from IMDb and Metacritic via OMDb. Streaming availability from TMDB and JustWatch. This product uses the TMDB API
